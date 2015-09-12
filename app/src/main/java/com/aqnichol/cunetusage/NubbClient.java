@@ -20,6 +20,9 @@ import java.util.List;
  */
 public class NubbClient {
 
+    private final int CONNECT_TIMEOUT = 15000;
+    private final int READ_TIMEOUT = 10000;
+
     private CookieManager cookieManager = new CookieManager();
     private String username = null;
     private String password = null;
@@ -36,8 +39,11 @@ public class NubbClient {
     }
 
     public boolean authenticate() throws IOException {
-        URL url = new URL("http://nubb.cornell.edu");
+        URL url = new URL("https://nubb.cornell.edu/");
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        connection.setConnectTimeout(CONNECT_TIMEOUT);
+        connection.setReadTimeout(READ_TIMEOUT);
+        connection.getHeaderFields();
         URL newURL = connection.getURL();
         connection.disconnect();
         Log.d("NUBB_CLIENT", "newURL is " + newURL);
@@ -50,14 +56,17 @@ public class NubbClient {
     private String getURL(String urlString) throws IOException {
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        connection.setConnectTimeout(CONNECT_TIMEOUT);
+        connection.setReadTimeout(READ_TIMEOUT);
         putRequestCookies(connection);
+
+        connection.connect();
+        takeResponseCookies(connection);
+
         try {
             InputStream stream = connection.getInputStream();
             StringWriter writer = new StringWriter();
             IOUtils.copy(stream, writer, StandardCharsets.UTF_8);
-
-            takeResponseCookies(connection);
-
             return stream.toString();
         } finally {
             connection.disconnect();
