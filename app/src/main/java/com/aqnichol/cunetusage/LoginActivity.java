@@ -52,8 +52,9 @@ public class LoginActivity extends Activity {
     /**
      * AuthenticateTask asynchronously authenticates with Cornell's NUBB system.
      */
-    public class AuthenticateTask extends AsyncTask<NubbClient, Void, Boolean> {
+    private class AuthenticateTask extends AsyncTask<NubbClient, Void, Boolean> {
         private ProgressDialog dialog;
+        private NubbClient client;
 
         public AuthenticateTask(ProgressDialog d) {
             dialog = d;
@@ -61,8 +62,9 @@ public class LoginActivity extends Activity {
 
         @Override
         protected Boolean doInBackground(NubbClient... c) {
+            client = c[0];
             try {
-                return new Boolean(c[0].authenticate());
+                return new Boolean(client.authenticate());
             } catch (IOException e) {
                 return new Boolean(false);
             }
@@ -71,6 +73,7 @@ public class LoginActivity extends Activity {
         protected void onPostExecute(Boolean b) {
             dialog.dismiss();
             if (b.booleanValue()) {
+                MainActivity.currentClient = client;
                 Intent i = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(i);
             } else {

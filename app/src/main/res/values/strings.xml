@@ -11,4 +11,11 @@
     <string name="ok">OK</string>
 
     <string name="title_activity_main">Network Usage</string>
+    <string name="fetch_info_error">Failed to load data from the server.</string>
+
+    <string name="total_usage">Total Usage:</string>
+    <string name="free_usage">Free Data:</string>
+    <string name="billable_usage">Billable Usage:</string>
+    <string name="billing_rate">Billing Rate:</string>
+    <string name="total_charge">Total Charge:</string>
 </resources>

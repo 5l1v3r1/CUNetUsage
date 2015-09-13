@@ -15,11 +15,21 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The NubbClient facilitates interaction with the Cornell NUBB website.
  */
 public class NubbClient {
+
+    public static class GeneralMonthInfo {
+        public long totalUsageMB;
+        public long freeUsageMB;
+        public long billableUsageMB;
+        public String billingRate;
+        public String totalCharge;
+    }
 
     private final int CONNECT_TIMEOUT = 15000;
     private final int READ_TIMEOUT = 10000;
@@ -67,12 +77,29 @@ public class NubbClient {
             if (conn.getResponseCode() != 303) {
                 return false;
             } else {
+                // Make the next request to get the cookie from it.
                 String location = conn.getHeaderFields().get("Location").get(0);
-                getURL(new URL(location));
+                getURL(new URL(location), false);
                 return true;
             }
         } finally {
             conn.disconnect();
+        }
+    }
+
+    /**
+     * fetchGeneralMonthInfo gets the GeneralMonthInfo for the current month.
+     * @returns an instance of GeneralMonthInfo which is completely owned by the caller. It will not
+     * be modified or referenced by this NubbClient.
+     * @throws IOException if the info could not be fetched or parsed.
+     */
+    public GeneralMonthInfo fetchGeneralMonthInfo() throws IOException {
+        String page = getURL(new URL("https://nubb.cornell.edu/"));
+        try {
+            return parseMonthInfo(page);
+        } catch (Exception e) {
+            Log.v("NubbClient", "got exception " + e);
+            throw new IOException("could not parse month info");
         }
     }
 
@@ -100,8 +127,44 @@ public class NubbClient {
         return new URL("https://web2.login.cornell.edu/" + actionPath);
     }
 
+    private GeneralMonthInfo parseMonthInfo(String infoPage) throws IllegalStateException,
+            NumberFormatException {
+        GeneralMonthInfo info = new GeneralMonthInfo();
+
+        String[] patternStrings = new String[]{
+                "<td><b>Total Usage \\(MB\\):<\\/b> <\\/td><td>(.*?)<\\/td>",
+                "FREE Monthly Usage \\(MB\\):<\\/b> <\\/td><td>(.*?)<\\/td>",
+                "<td><b>Billable Usage \\(MB\\):<\\/b> <\\/td><td>(.*?)<\\/td>",
+                "<td><b>Billing Rate:<\\/b> <\\/td><td>(.*?)<\\/td>",
+                "Total Charge:<\\/b> <\\/td><td><b>(.*?)<\\/b><\\/td>"
+        };
+
+        String[] extracted = new String[5];
+        for (int i = 0; i < 5; ++i) {
+            Pattern p = Pattern.compile(patternStrings[i]);
+            Matcher m = p.matcher(infoPage);
+            m.find();
+            extracted[i] = m.group(1);
+        }
+
+        info.totalUsageMB = Integer.parseInt(extracted[0].replaceAll(",", ""));
+        info.freeUsageMB = Integer.parseInt(extracted[1].replaceAll(",", ""));
+        info.billableUsageMB = Integer.parseInt(extracted[2].replaceAll(",", ""));
+        info.billingRate = extracted[3];
+        info.totalCharge = extracted[4];
+
+        return info;
+    }
+
     private String getURL(URL url) throws IOException {
+        return getURL(url, true);
+    }
+
+    private String getURL(URL url, boolean followRedirects) throws IOException {
         HttpURLConnection connection = makeConnection(url);
+        if (!followRedirects) {
+            connection.setInstanceFollowRedirects(false);
+        }
         connection.connect();
         takeResponseCookies(connection);
 
