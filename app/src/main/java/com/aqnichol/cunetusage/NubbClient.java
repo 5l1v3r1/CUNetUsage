@@ -6,12 +6,13 @@ import android.util.Log;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -38,39 +39,87 @@ public class NubbClient {
         password = pass;
     }
 
+    /**
+     * Authenticate as the previously-specified user.
+     * @return true if the authentication succeeded, false if the user's credentials did not work.
+     * @throws IOException if any network requests fail or if any parsing errors occur.
+     */
     public boolean authenticate() throws IOException {
-        URL url = new URL("https://nubb.cornell.edu/");
-        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-        connection.setConnectTimeout(CONNECT_TIMEOUT);
-        connection.setReadTimeout(READ_TIMEOUT);
-        connection.getHeaderFields();
-        URL newURL = connection.getURL();
-        connection.disconnect();
-        Log.d("NUBB_CLIENT", "newURL is " + newURL);
+        URL postURL = getAuthenticationPostURL();
 
-        // TODO: this.
+        HttpURLConnection conn = makeConnection(postURL);
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        conn.setUseCaches(false);
+        conn.setInstanceFollowRedirects(false);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-        return false;
+        String postData = "netid=" + URLEncoder.encode(username, "UTF-8") + "&password=" +
+                URLEncoder.encode(password, "UTF-8") + "&Submit=Login";
+        conn.setRequestProperty("Content-Length", "" + postData.getBytes().length);
+
+        try {
+            IOUtils.copy(new StringReader(postData), conn.getOutputStream(),
+                    StandardCharsets.UTF_8);
+            takeResponseCookies(conn);
+
+            if (conn.getResponseCode() != 303) {
+                return false;
+            } else {
+                String location = conn.getHeaderFields().get("Location").get(0);
+                getURL(new URL(location));
+                return true;
+            }
+        } finally {
+            conn.disconnect();
+        }
     }
 
-    private String getURL(String urlString) throws IOException {
-        URL url = new URL(urlString);
-        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-        connection.setConnectTimeout(CONNECT_TIMEOUT);
-        connection.setReadTimeout(READ_TIMEOUT);
-        putRequestCookies(connection);
+    /**
+     * Get the URL to which authentication credentials should be POSTed.
+     * @return the full URL to which the authentication form should be posted.
+     * @throws IOException if any requests fail or if the login form cannot be parsed.
+     */
+    private URL getAuthenticationPostURL() throws IOException {
+        String pageContent = getURL(new URL("https://nubb.cornell.edu/"));
 
+        String actionPreamble = "method=\"post\" action=\"";
+        int startIndex = pageContent.indexOf(actionPreamble);
+        if (startIndex < 0) {
+            throw new IOException("form action not found");
+        }
+        startIndex += actionPreamble.length();
+        int endIndex = pageContent.indexOf("\"", startIndex);
+        if (endIndex < 0) {
+            throw new IOException("form action not found");
+        }
+
+        String actionPath = pageContent.substring(startIndex, endIndex);
+        actionPath = actionPath.replaceAll(" ", "%20");
+        return new URL("https://web2.login.cornell.edu/" + actionPath);
+    }
+
+    private String getURL(URL url) throws IOException {
+        HttpURLConnection connection = makeConnection(url);
         connection.connect();
         takeResponseCookies(connection);
 
         try {
-            InputStream stream = connection.getInputStream();
             StringWriter writer = new StringWriter();
-            IOUtils.copy(stream, writer, StandardCharsets.UTF_8);
-            return stream.toString();
+            IOUtils.copy(connection.getInputStream(), writer, StandardCharsets.UTF_8);
+            return writer.toString();
         } finally {
             connection.disconnect();
         }
+    }
+
+    private HttpURLConnection makeConnection(URL url) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        connection.setConnectTimeout(CONNECT_TIMEOUT);
+        connection.setReadTimeout(READ_TIMEOUT);
+        putRequestCookies(connection);
+        return connection;
     }
 
     private void takeResponseCookies(HttpURLConnection connection) {

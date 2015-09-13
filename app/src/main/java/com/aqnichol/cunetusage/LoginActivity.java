@@ -1,10 +1,13 @@
 package com.aqnichol.cunetusage;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
@@ -31,8 +34,7 @@ public class LoginActivity extends Activity {
         client.setPassword(passwordField.getText().toString());
 
         ProgressDialog progress = new ProgressDialog(this);
-        progress.setTitle("Authenticating");
-        progress.setMessage("Authenticating in the hackiest possible way...");
+        progress.setTitle(R.string.authenticating);
 
         final AuthenticateTask task = new AuthenticateTask(progress);
 
@@ -50,7 +52,7 @@ public class LoginActivity extends Activity {
     /**
      * AuthenticateTask asynchronously authenticates with Cornell's NUBB system.
      */
-    public static class AuthenticateTask extends AsyncTask<NubbClient, Void, Boolean> {
+    public class AuthenticateTask extends AsyncTask<NubbClient, Void, Boolean> {
         private ProgressDialog dialog;
 
         public AuthenticateTask(ProgressDialog d) {
@@ -68,6 +70,15 @@ public class LoginActivity extends Activity {
 
         protected void onPostExecute(Boolean b) {
             dialog.dismiss();
+            if (b.booleanValue()) {
+                Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(i);
+            } else {
+                AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                builder.setMessage(R.string.login_error);
+                builder.setPositiveButton(R.string.ok, null);
+                builder.create().show();
+            }
         }
     }
 
