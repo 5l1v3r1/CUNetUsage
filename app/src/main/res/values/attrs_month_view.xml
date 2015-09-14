@@ -1,0 +1,4 @@
+<resources>
+    <declare-styleable name="MonthView">
+    </declare-styleable>
+</resources>
