@@ -1,10 +1,11 @@
 package com.aqnichol.cunetusage;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -13,26 +14,17 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends AppCompatActivity {
 
     public static NubbClient currentClient = null;
-
-    private TextView totalUsageField;
-    private TextView freeUsageField;
-    private TextView billableUsageField;
-    private TextView billingRateField;
-    private TextView totalChargeField;
+    private MonthView monthView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        totalUsageField = (TextView)findViewById(R.id.total_usage);
-        freeUsageField = (TextView)findViewById(R.id.free_usage);
-        billableUsageField = (TextView)findViewById(R.id.billable_usage);
-        billingRateField = (TextView)findViewById(R.id.billing_rate);
-        totalChargeField = (TextView)findViewById(R.id.total_charge);
+        monthView = (MonthView)findViewById(R.id.main_month_view);
 
         new FetchInfoTask().execute();
     }
@@ -59,16 +51,22 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private String formatMegabytes(long size) {
-        if (size > 1024) {
-            DecimalFormat f = new DecimalFormat();
-            f.setMinimumFractionDigits(2);
-            return f.format((double)size / 1024.0) + " GiB";
-        }
-        return size + " MiB";
-    }
-
     private class FetchInfoTask extends AsyncTask<Void, Void, NubbClient.GeneralMonthInfo> {
+        private ProgressDialog progress;
+
+        @Override
+        protected void onPreExecute() {
+            progress = new ProgressDialog(MainActivity.this);
+            progress.setMessage(getString(R.string.fetching_info));
+            progress.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    cancel(false);
+                }
+            });
+            progress.show();
+        }
+
         @Override
         protected NubbClient.GeneralMonthInfo doInBackground(Void... params) {
             try {
@@ -80,18 +78,16 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         protected void onPostExecute(NubbClient.GeneralMonthInfo result) {
+            progress.dismiss();
             if (result == null) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setMessage(R.string.fetch_info_error);
                 builder.setPositiveButton(R.string.ok, null);
                 builder.create().show();
                 return;
+            } else {
+                monthView.setGeneralMonthInfo(result);
             }
-            totalUsageField.setText(formatMegabytes(result.totalUsageMB));
-            freeUsageField.setText(formatMegabytes(result.freeUsageMB));
-            billableUsageField.setText(formatMegabytes(result.billableUsageMB));
-            billingRateField.setText(result.billingRate);
-            totalChargeField.setText(result.totalCharge);
         }
     }
 

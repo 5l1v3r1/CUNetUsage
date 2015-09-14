@@ -18,4 +18,5 @@
     <string name="billable_usage">Billable Usage:</string>
     <string name="billing_rate">Billing Rate:</string>
     <string name="total_charge">Total Charge:</string>
+    <string name="fetching_info">Fetching information</string>
 </resources>

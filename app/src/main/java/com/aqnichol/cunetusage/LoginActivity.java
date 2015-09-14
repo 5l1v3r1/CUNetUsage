@@ -32,21 +32,7 @@ public class LoginActivity extends Activity {
         NubbClient client = new NubbClient();
         client.setUsername(netIdField.getText().toString());
         client.setPassword(passwordField.getText().toString());
-
-        ProgressDialog progress = new ProgressDialog(this);
-        progress.setTitle(R.string.authenticating);
-
-        final AuthenticateTask task = new AuthenticateTask(progress);
-
-        progress.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                task.cancel(false);
-            }
-        });
-
-        progress.show();
-        task.execute(client);
+        new AuthenticateTask().execute(client);
     }
 
     /**
@@ -56,8 +42,17 @@ public class LoginActivity extends Activity {
         private ProgressDialog dialog;
         private NubbClient client;
 
-        public AuthenticateTask(ProgressDialog d) {
-            dialog = d;
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(LoginActivity.this);
+            dialog.setMessage(getString(R.string.authenticating));
+            dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    cancel(false);
+                }
+            });
+            dialog.show();
         }
 
         @Override
@@ -70,6 +65,7 @@ public class LoginActivity extends Activity {
             }
         }
 
+        @Override
         protected void onPostExecute(Boolean b) {
             dialog.dismiss();
             if (b.booleanValue()) {
