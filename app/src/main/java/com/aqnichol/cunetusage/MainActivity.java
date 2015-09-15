@@ -21,8 +21,8 @@ public class MainActivity extends AppCompatActivity {
     private MonthView monthView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle state) {
+        super.onCreate(state);
         setContentView(R.layout.activity_main);
 
         monthView = (MonthView)findViewById(R.id.main_month_view);
@@ -35,7 +35,23 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        new FetchInfoTask().execute();
+        if (state != null) {
+            if (state.containsKey("currentMonth")) {
+                monthView.setGeneralMonthInfo((GeneralMonthInfo)state.get("currentMonth"));
+            }
+        }
+
+        if (monthView.getGeneralMonthInfo() == null) {
+            new FetchInfoTask().execute();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle bundle) {
+        if (monthView.getGeneralMonthInfo() != null) {
+            bundle.putParcelable("currentMonth", monthView.getGeneralMonthInfo());
+        }
+        super.onSaveInstanceState(bundle);
     }
 
     @Override
@@ -63,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private class FetchInfoTask extends AsyncTask<Void, Void, NubbClient.GeneralMonthInfo> {
+    private class FetchInfoTask extends AsyncTask<Void, Void, GeneralMonthInfo> {
         private ProgressDialog progress;
 
         @Override
@@ -80,16 +96,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected NubbClient.GeneralMonthInfo doInBackground(Void... params) {
+        protected GeneralMonthInfo doInBackground(Void... params) {
             try {
                 return currentClient.fetchGeneralMonthInfo();
             } catch (IOException e) {
+                Log.e("MainActivity", "fetching general month info failed: " + e);
                 return null;
             }
         }
 
         @Override
-        protected void onPostExecute(NubbClient.GeneralMonthInfo result) {
+        protected void onPostExecute(GeneralMonthInfo result) {
             progress.dismiss();
             if (result == null) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);

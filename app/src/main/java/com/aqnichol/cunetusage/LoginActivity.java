@@ -82,9 +82,10 @@ public class LoginActivity extends Activity {
         protected Boolean doInBackground(NubbClient... c) {
             client = c[0];
             try {
-                return new Boolean(client.authenticate());
+                return client.authenticate();
             } catch (IOException e) {
-                return new Boolean(false);
+                Log.e("LoginActivity", "authentication failed: " + e);
+                return false;
             }
         }
 

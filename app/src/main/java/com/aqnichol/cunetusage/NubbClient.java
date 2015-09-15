@@ -20,18 +20,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * The NubbClient facilitates interaction with the Cornell NUBB website.
- */
 public class NubbClient implements Parcelable {
-
-    public static class GeneralMonthInfo {
-        public long totalUsageMB;
-        public long freeUsageMB;
-        public long billableUsageMB;
-        public String billingRate;
-        public String totalCharge;
-    }
 
     public static final Parcelable.Creator<NubbClient> CREATOR
             = new Parcelable.Creator<NubbClient>() {
@@ -123,7 +112,7 @@ public class NubbClient implements Parcelable {
 
     /**
      * fetchGeneralMonthInfo gets the GeneralMonthInfo for the current month.
-     * @returns an instance of GeneralMonthInfo which is completely owned by the caller. It will not
+     * @return an instance of GeneralMonthInfo which is completely owned by the caller. It will not
      * be modified or referenced by this NubbClient.
      * @throws IOException if the info could not be fetched or parsed.
      */

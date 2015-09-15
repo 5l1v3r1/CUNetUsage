@@ -18,7 +18,7 @@ public class MonthView extends RelativeLayout {
     private TextView billableUsageField;
     private TextView billingRateField;
     private TextView totalChargeField;
-    private NubbClient.GeneralMonthInfo monthInfo;
+    private GeneralMonthInfo monthInfo = null;
 
     public MonthView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -31,11 +31,11 @@ public class MonthView extends RelativeLayout {
         totalChargeField = (TextView)findViewById(R.id.total_charge);
     }
 
-    public NubbClient.GeneralMonthInfo getGeneralMonthInfo() {
+    public GeneralMonthInfo getGeneralMonthInfo() {
         return monthInfo;
     }
 
-    public void setGeneralMonthInfo(NubbClient.GeneralMonthInfo info) {
+    public void setGeneralMonthInfo(GeneralMonthInfo info) {
         monthInfo = info;
         totalUsageField.setText(formatMegabytes(info.totalUsageMB));
         freeUsageField.setText(formatMegabytes(info.freeUsageMB));
