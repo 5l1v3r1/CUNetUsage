@@ -9,6 +9,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 
 import java.io.IOException;
@@ -31,7 +32,8 @@ public class LoginActivity extends Activity {
         if (oldClient != null) {
             new AuthenticateTask().execute(oldClient);
         } else {
-            setFieldsEnabled(true);
+            netIdField.requestFocus();
+            this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         }
     }
 
@@ -40,11 +42,6 @@ public class LoginActivity extends Activity {
         client.setUsername(netIdField.getText().toString());
         client.setPassword(passwordField.getText().toString());
         new AuthenticateTask().execute(client);
-    }
-
-    private void setFieldsEnabled(boolean flag) {
-        this.netIdField.setEnabled(flag);
-        this.passwordField.setEnabled(flag);
     }
 
     /**
@@ -56,7 +53,6 @@ public class LoginActivity extends Activity {
 
         @Override
         protected void onPreExecute() {
-            setFieldsEnabled(false);
             dialog = new ProgressDialog(LoginActivity.this);
             dialog.setMessage(getString(R.string.authenticating));
             dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -83,7 +79,6 @@ public class LoginActivity extends Activity {
             dialog.dismiss();
             SessionSaver saver = new SessionSaver(LoginActivity.this);
             if (b) {
-                setFieldsEnabled(true);
                 saver.saveClient(client);
                 Intent i = new Intent(LoginActivity.this, MainActivity.class);
                 i.putExtra("client", client);
@@ -98,12 +93,6 @@ public class LoginActivity extends Activity {
                 builder.setMessage(R.string.login_error);
                 builder.setPositiveButton(R.string.ok, null);
                 builder.setCancelable(false);
-                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        setFieldsEnabled(true);
-                    }
-                });
                 builder.create().show();
             }
         }

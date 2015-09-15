@@ -22,8 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:id="@+id/net_id"
-            android:enabled="false" />
+            android:id="@+id/net_id" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -35,8 +34,7 @@
             android:layout_height="wrap_content"
             android:password="true"
             android:singleLine="true"
-            android:id="@+id/password"
-            android:enabled="false" />
+            android:id="@+id/password" />
 
         <Button
             android:layout_width="match_parent"
