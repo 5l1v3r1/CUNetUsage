@@ -128,7 +128,7 @@ public class NubbClient implements Parcelable {
      * @throws IOException if the info could not be fetched or parsed.
      */
     public GeneralMonthInfo fetchGeneralMonthInfo() throws IOException {
-        String page = getURL(new URL("https://nubb.cornell.edu/"));
+        String page = getAuthenticatedURL(new URL("https://nubb.cornell.edu/"));
         try {
             return parseMonthInfo(page);
         } catch (Exception e) {
@@ -219,6 +219,39 @@ public class NubbClient implements Parcelable {
         }
         connection.connect();
         takeResponseCookies(connection);
+
+        try {
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(connection.getInputStream(), writer, StandardCharsets.UTF_8);
+            return writer.toString();
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    /**
+     * Fetches a URL which requires authentication. This will attempt to re-authenticate if
+     * necessary.
+     * @param url the URL to fetch.
+     * @return the UTF-8 representation of the page's contents.
+     * @throws IOException if the request or re-authentication fails.
+     */
+    private String getAuthenticatedURL(URL url) throws IOException {
+        HttpURLConnection connection = makeConnection(url);
+        connection.connect();
+        takeResponseCookies(connection);
+
+        // Re-authenticate if the request triggered a redirect.
+        if (!connection.getURL().getHost().equals(url.getHost())) {
+            connection.disconnect();
+            if (!authenticate()) {
+                Log.v("NubbClient", "re-authenticating because of redirect");
+                throw new IOException("failed to re-authenticate");
+            } else {
+                // NOTE: a second redirect should not occur, so we don't worry about it.
+                return getURL(url, false);
+            }
+        }
 
         try {
             StringWriter writer = new StringWriter();
