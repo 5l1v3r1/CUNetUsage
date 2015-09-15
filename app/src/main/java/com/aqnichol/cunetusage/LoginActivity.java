@@ -69,8 +69,8 @@ public class LoginActivity extends Activity {
         protected void onPostExecute(Boolean b) {
             dialog.dismiss();
             if (b.booleanValue()) {
-                MainActivity.currentClient = client;
                 Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                i.putExtra("client", client);
                 startActivity(i);
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);

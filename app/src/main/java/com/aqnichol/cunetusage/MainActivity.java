@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -16,7 +17,7 @@ import java.text.DecimalFormat;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static NubbClient currentClient = null;
+    private NubbClient currentClient;
     private MonthView monthView;
 
     @Override
@@ -25,6 +26,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         monthView = (MonthView)findViewById(R.id.main_month_view);
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            currentClient = (NubbClient)extras.get("client");
+        } else {
+            Log.e("MainActivity", "started without extras");
+            return;
+        }
 
         new FetchInfoTask().execute();
     }

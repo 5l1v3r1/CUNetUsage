@@ -1,5 +1,7 @@
 package com.aqnichol.cunetusage;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -21,7 +23,7 @@ import java.util.regex.Pattern;
 /**
  * The NubbClient facilitates interaction with the Cornell NUBB website.
  */
-public class NubbClient {
+public class NubbClient implements Parcelable {
 
     public static class GeneralMonthInfo {
         public long totalUsageMB;
@@ -31,18 +33,50 @@ public class NubbClient {
         public String totalCharge;
     }
 
+    public static final Parcelable.Creator<NubbClient> CREATOR
+            = new Parcelable.Creator<NubbClient>() {
+        public NubbClient createFromParcel(Parcel in) {
+            return new NubbClient(in);
+        }
+
+        public NubbClient[] newArray(int size) {
+            return new NubbClient[size];
+        }
+    };
+
     private final int CONNECT_TIMEOUT = 15000;
     private final int READ_TIMEOUT = 10000;
 
     private CookieManager cookieManager = new CookieManager();
-    private String username = null;
-    private String password = null;
+    private String username = "";
+    private String password = "";
 
     public NubbClient() {
     }
 
+    public NubbClient(Parcel p) {
+        username = p.readString();
+        password = p.readString();
+
+        int cookieCount = p.readInt();
+        while (cookieCount-- > 0) {
+            String name = p.readString();
+            String value = p.readString();
+            HttpCookie c = new HttpCookie(name, value);
+            cookieManager.getCookieStore().add(null, c);
+        }
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
     public void setUsername(String user) {
         username = user;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public void setPassword(String pass) {
@@ -100,6 +134,24 @@ public class NubbClient {
         } catch (Exception e) {
             Log.v("NubbClient", "got exception " + e);
             throw new IOException("could not parse month info");
+        }
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(username);
+        dest.writeString(password);
+
+        List<HttpCookie> cookies = cookieManager.getCookieStore().getCookies();
+        dest.writeInt(cookies.size());
+        for (HttpCookie c : cookies) {
+            dest.writeString(c.getName());
+            dest.writeString(c.getValue());
         }
     }
 
