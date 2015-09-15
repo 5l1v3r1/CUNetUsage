@@ -26,6 +26,13 @@ public class LoginActivity extends Activity {
 
         netIdField = (EditText)findViewById(R.id.net_id);
         passwordField = (EditText)findViewById(R.id.password);
+
+        NubbClient oldClient = new SessionSaver(this).loadClient();
+        if (oldClient != null) {
+            new AuthenticateTask().execute(oldClient);
+        } else {
+            setFieldsEnabled(true);
+        }
     }
 
     public void login(View buttonView) {
@@ -33,6 +40,11 @@ public class LoginActivity extends Activity {
         client.setUsername(netIdField.getText().toString());
         client.setPassword(passwordField.getText().toString());
         new AuthenticateTask().execute(client);
+    }
+
+    private void setFieldsEnabled(boolean flag) {
+        this.netIdField.setEnabled(flag);
+        this.passwordField.setEnabled(flag);
     }
 
     /**
@@ -44,6 +56,7 @@ public class LoginActivity extends Activity {
 
         @Override
         protected void onPreExecute() {
+            setFieldsEnabled(false);
             dialog = new ProgressDialog(LoginActivity.this);
             dialog.setMessage(getString(R.string.authenticating));
             dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -68,14 +81,29 @@ public class LoginActivity extends Activity {
         @Override
         protected void onPostExecute(Boolean b) {
             dialog.dismiss();
-            if (b.booleanValue()) {
+            SessionSaver saver = new SessionSaver(LoginActivity.this);
+            if (b) {
+                setFieldsEnabled(true);
+                saver.saveClient(client);
                 Intent i = new Intent(LoginActivity.this, MainActivity.class);
                 i.putExtra("client", client);
                 startActivity(i);
             } else {
+                // NOTE: we clear the saved session now because the login could have been from a
+                // saved session. In this case, it would not be cool if the failed login happened
+                // every time the user opened the app.
+                saver.clear();
+
                 AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
                 builder.setMessage(R.string.login_error);
                 builder.setPositiveButton(R.string.ok, null);
+                builder.setCancelable(false);
+                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        setFieldsEnabled(true);
+                    }
+                });
                 builder.create().show();
             }
         }
