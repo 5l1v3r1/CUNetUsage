@@ -57,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_logout) {
             finish();
             return true;
+        } else if (id == R.id.action_refresh) {
+            new FetchInfoTask().execute();
         }
         return super.onOptionsItemSelected(item);
     }
