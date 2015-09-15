@@ -7,7 +7,6 @@
     <string name="password">Password</string>
     <string name="login">Login</string>
     <string name="authenticating">Authenticating</string>
-    <string name="login_error">Failed to login using the provided credentials.</string>
     <string name="ok">OK</string>
 
     <string name="title_activity_main">Network Usage</string>
@@ -22,4 +21,7 @@
     <string name="session_preferences">com.aqnichol.cunetusage.SESSION_PREFERENCES</string>
     <string name="logout">Logout</string>
     <string name="refresh">Refresh</string>
+
+    <string name="login_error">Login failed</string>
+    <string name="login_incorrect">The credentials you provided were incorrect.</string>
 </resources>

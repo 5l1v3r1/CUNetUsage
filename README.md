@@ -4,5 +4,5 @@ At Cornell University, each student's network usage is limited to 100GiB per mon
 
 # TODO
 
- * Keep loading even if the user rotates the device (i.e. the activity gets re-made).
- * Show helpful error messages if a request fails.
+ * Move MonthView to a fragment and have it do the loading.
+ * Show helpful error messages if month info request fails.
