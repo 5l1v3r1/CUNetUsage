@@ -14,24 +14,17 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/username" />
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:hint="@string/username"
             android:singleLine="true"
             android:id="@+id/net_id" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/password"
-            android:layout_marginTop="@dimen/login_view_spacing" />
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/login_view_spacing"
+            android:hint="@string/password"
             android:password="true"
             android:singleLine="true"
             android:id="@+id/password" />
